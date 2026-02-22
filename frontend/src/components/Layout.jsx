@@ -12,10 +12,7 @@ const Layout = () => {
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="flex justify-between items-center p-6 bg-white border-b border-slate-200">
                     <div>
-                        <h1 className="text-2xl font-semibold text-slate-800">
-                            Hiru Ayurveda<span className="text-[#f28c00]">Resorts</span>
-                        </h1>
-                        <p className="text-sm text-slate-500">Centralized Management System</p>
+                        {/* Title text moved to Sidebar */}
                     </div>
 
                     <div className="flex items-center space-x-6">

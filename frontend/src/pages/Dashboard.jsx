@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Users, UserPlus, UserMinus, DollarSign, CalendarHeart } from 'lucide-react';
-import { format } from 'date-fns';
+import PropTypes from 'prop-types';
 
 const DashboardCard = ({ title, value, icon: Icon, colorClass }) => (
     <div className="luxury-card p-6 flex items-center justify-between">
@@ -15,6 +15,13 @@ const DashboardCard = ({ title, value, icon: Icon, colorClass }) => (
         </div>
     </div>
 );
+
+DashboardCard.propTypes = {
+    title: PropTypes.string.isRequired,
+    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    icon: PropTypes.elementType.isRequired,
+    colorClass: PropTypes.string.isRequired
+};
 
 const Dashboard = () => {
     const { token, user } = useAuth();
@@ -44,7 +51,7 @@ const Dashboard = () => {
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Overview</h2>
-                    <p className="text-slate-500 mt-1">Welcome back, here is what's happening today at {user?.hotelBranch === 'All' ? 'Hiru Resorts' : user?.hotelBranch}.</p>
+                    <p className="text-slate-500 mt-1">Welcome back, here is what&apos;s happening today at {user?.hotelBranch === 'All' ? 'Hiru Resorts' : user?.hotelBranch}.</p>
                 </div>
             </div>
 
@@ -97,7 +104,7 @@ const Dashboard = () => {
                                     <CalendarHeart className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-slate-800">Sarah Smith's Birthday</p>
+                                    <p className="font-semibold text-slate-800">Sarah Smith&apos;s Birthday</p>
                                     <p className="text-xs text-slate-500">Hiru Om • Room 205</p>
                                 </div>
                             </div>

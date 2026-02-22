@@ -3,7 +3,11 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Guests from './pages/Guests';
+import Arrivals from './pages/Arrivals';
+import Departures from './pages/Departures';
 import Layout from './components/Layout';
+
+import PropTypes from 'prop-types';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
@@ -17,6 +21,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   return children;
+};
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string)
 };
 
 function App() {
@@ -33,6 +42,8 @@ function App() {
           }>
             <Route index element={<Dashboard />} />
             <Route path="guests" element={<Guests />} />
+            <Route path="arrivals" element={<Arrivals />} />
+            <Route path="departures" element={<Departures />} />
             {/* Add more routes for Rooms, Reports, Settings here */}
           </Route>
         </Routes>

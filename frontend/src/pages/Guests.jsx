@@ -1,28 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { Search, Filter, Plus } from 'lucide-react';
+import AddGuestModal from '../components/AddGuestModal';
+import ViewGuestModal from '../components/ViewGuestModal';
 
 const Guests = () => {
-    const { token, user } = useAuth();
+    const { token } = useAuth();
     const [guests, setGuests] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [hotelFilter, setHotelFilter] = useState('All');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [viewModalGuest, setViewModalGuest] = useState(null);
+
+    const fetchGuests = useCallback(async () => {
+        try {
+            const res = await axios.get('http://localhost:5000/api/guests', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setGuests(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    }, [token]);
 
     useEffect(() => {
-        const fetchGuests = async () => {
-            try {
-                const res = await axios.get('http://localhost:5000/api/guests', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setGuests(res.data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
         fetchGuests();
-    }, [token]);
+    }, [fetchGuests]);
 
     const filteredGuests = guests.filter(guest => {
         const matchesSearch = guest.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -37,11 +42,26 @@ const Guests = () => {
                 <div>
                     <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Guest Management</h2>
                 </div>
-                <button className="bg-[#f28c00] hover:bg-[#e07b00] text-white px-6 py-3 rounded-xl font-semibold transition flex items-center space-x-2 shadow-lg shadow-orange-500/30">
+                <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-[#f28c00] hover:bg-[#e07b00] text-white px-6 py-3 rounded-xl font-semibold transition flex items-center space-x-2 shadow-lg shadow-orange-500/30"
+                >
                     <Plus className="w-5 h-5" />
                     <span>Add New Guest</span>
                 </button>
             </div>
+
+            <AddGuestModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onGuestAdded={fetchGuests}
+            />
+
+            <ViewGuestModal
+                isOpen={!!viewModalGuest}
+                onClose={() => setViewModalGuest(null)}
+                guest={viewModalGuest}
+            />
 
             <div className="luxury-card p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
@@ -78,10 +98,11 @@ const Guests = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50 border-y border-slate-200">
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Guest Name</th>
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Hotel & Room</th>
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Arrival/Departure</th>
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Status</th>
+                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Guest & Contact</th>
+                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Passport & Visa</th>
+                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Reservation Details</th>
+                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Remarks</th>
+                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider text-right">Actions</th>
                                 <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
@@ -89,34 +110,46 @@ const Guests = () => {
                             {filteredGuests.length > 0 ? filteredGuests.map((guest) => (
                                 <tr key={guest._id} className="hover:bg-slate-50/50 transition">
                                     <td className="py-4 px-6">
-                                        <div className="flex items-center">
-                                            <div className="w-10 h-10 rounded-full bg-[#f28c00]/20 text-[#f28c00] flex items-center justify-center font-bold mr-3">
-                                                {guest.fullName.charAt(0)}
+                                        <p className="font-semibold text-slate-800">{guest.fullName}</p>
+                                        <p className="text-xs text-slate-500">
+                                            {guest.dateOfBirth ? `DOB: ${format(new Date(guest.dateOfBirth), 'dd/MM/yyyy')} | ` : ''}
+                                            {guest.contactNumber || 'No Phone'}
+                                        </p>
+                                        <p className="text-xs text-slate-500 max-w-[150px] truncate" title={guest.email}>{guest.email}</p>
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <p className="font-medium text-slate-800">{guest.passportNumber || 'N/A'}</p>
+                                        <p className="text-xs text-slate-500">
+                                            Nationality: {guest.nationality || 'N/A'}
+                                        </p>
+                                        <p className="text-xs text-slate-500 text-[#f28c00]">
+                                            Exp: {guest.visaExpiryDate ? format(new Date(guest.visaExpiryDate), 'dd/MM/yyyy') : 'N/A'}
+                                        </p>
+                                    </td>
+                                    <td className="py-4 px-6 text-sm text-slate-600">
+                                        <div className="flex gap-4">
+                                            <div>
+                                                <p className="font-medium text-slate-800">{guest.hotelBranch} - Rm {guest.roomNumber || 'TBA'}</p>
+                                                <p className="text-xs text-slate-500">Pax: {guest.pax}, Agent: {guest.agent || 'Direct'}</p>
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-slate-800">{guest.fullName}</p>
-                                                <p className="text-xs text-slate-500">{guest.nationality} • {guest.passportNumber}</p>
+                                                <p className="text-xs font-semibold text-slate-600">IN: {guest.arrivalDate ? format(new Date(guest.arrivalDate), 'dd/MM/yy') : '-'}</p>
+                                                <p className="text-xs font-semibold text-slate-600">OUT: {guest.departureDate ? format(new Date(guest.departureDate), 'dd/MM/yy') : '-'}</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="py-4 px-6">
-                                        <p className="font-medium text-slate-800">{guest.hotelBranch}</p>
-                                        <p className="text-xs text-slate-500">Room {guest.roomNumber}</p>
-                                    </td>
-                                    <td className="py-4 px-6 text-sm text-slate-600">
-                                        <p className="font-medium text-slate-800">{guest.arrivalDate ? format(new Date(guest.arrivalDate), 'MMM dd, yyyy') : 'N/A'}</p>
-                                        <p className="text-xs text-slate-500">to {guest.departureDate ? format(new Date(guest.departureDate), 'MMM dd, yyyy') : 'N/A'}</p>
-                                    </td>
-                                    <td className="py-4 px-6">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold
-                      ${guest.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' :
-                                                guest.paymentStatus === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                                                    'bg-blue-100 text-blue-700'}`}>
-                                            {guest.paymentStatus}
-                                        </span>
+                                        <p className="text-xs text-slate-600 max-w-[150px] line-clamp-2" title={guest.remark}>
+                                            {guest.remark || <span className="italic text-slate-400">No remarks</span>}
+                                        </p>
                                     </td>
                                     <td className="py-4 px-6 text-right">
-                                        <button className="text-blue-600 font-medium hover:underline text-sm mr-4">View</button>
+                                        <button
+                                            onClick={() => setViewModalGuest(guest)}
+                                            className="text-blue-600 font-medium hover:underline text-sm mr-4"
+                                        >
+                                            View
+                                        </button>
                                         <button className="text-slate-600 font-medium hover:underline text-sm">Edit</button>
                                     </td>
                                 </tr>
