@@ -3,7 +3,7 @@ const Guest = require('../models/Guest');
 const { verifyToken, verifyRole } = require('../middleware/auth');
 const multer = require('multer');
 const fs = require('fs');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Tesseract = require('tesseract.js');
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
@@ -31,58 +31,62 @@ router.post('/', verifyToken, verifyRole('Admin', 'Front Office'), upload.single
     }
 });
 
-// EXTRACT DATA FROM HANDWRITTEN FORM OR PASSPORT USING GEMINI AI
+// EXTRACT DATA FROM HANDWRITTEN FORM OR PASSPORT USING TESSERACT.JS
 router.post('/extract', verifyToken, upload.single('document'), async (req, res) => {
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ message: "GEMINI_API_KEY is missing in server environment. Contact Admin." });
-        }
         if (!req.file) {
             return res.status(400).json({ message: "No document attached." });
         }
 
         const docType = req.body.docType || 'passport'; // 'passport' or 'form'
 
-        const fileData = fs.readFileSync(req.file.path);
-        const mimeType = req.file.mimetype;
+        // Run Tesseract OCR on the uploaded image
+        const { data: { text } } = await Tesseract.recognize(
+            req.file.path,
+            'eng',
+            { logger: m => console.log(m) }
+        );
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        // We use gemini-1.5-flash for fastest vision plus text capabilities
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        const prompt = `
-            You are an advanced AI reading a ${docType === 'passport' ? 'Passport' : 'handwritten Self-Declaration form (usually from German guests, so spelling might refer to German addresses but we only care about standard fields)'}.
-            Extract the following fields into strictly formatted JSON. If a field cannot be found, set it to an empty string "". Do not include Markdown blocks like \`\`\`json. Just output the raw JSON.
-            Required fields:
-            - fullName (String)
-            - dateOfBirth (YYYY-MM-DD or empty String)
-            - nationality (String)
-            - passportNumber (String)
-            - visaExpiryDate (YYYY-MM-DD or empty String)
-            - email (String)
-            - contactNumber (String)
-            - remark (String - Any useful notes like allergies, special requests, address if provided)
-        `;
-
-        const imagePart = {
-            inlineData: {
-                data: Buffer.from(fileData).toString("base64"),
-                mimeType
-            }
+        let extractedData = {
+            fullName: "",
+            dateOfBirth: "",
+            nationality: "",
+            passportNumber: "",
+            visaExpiryDate: "",
+            email: "",
+            contactNumber: "",
+            remark: ""
         };
 
-        const result = await model.generateContent([prompt, imagePart]);
-        const responseText = result.response.text().trim();
+        // Basic Regex Extraction on the OCR text
+        // Passport MRZ often looks like P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<
+        // And second line: L898902C36UTO7408122F1204159ZE184226B<<<<<10
+        // We do a simple best-effort matching since free OCR outputs unstructured text
 
-        let extractedData = {};
-        try {
-            // Strip any accidental markdown formatting if the model included it
-            const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-            extractedData = JSON.parse(cleanJson);
-        } catch (e) {
-            console.error("Failed to parse Gemini output", responseText);
-            return res.status(500).json({ message: "Failed to accurately parse AI response." });
+        // Attempt to find passport number (usually 8-9 uppercase alphanumeric characters)
+        const passportMatch = text.match(/\b([A-Z0-9]{8,9})\b/);
+        if (passportMatch) extractedData.passportNumber = passportMatch[1];
+
+        // Match dates like YYYY-MM-DD, DD/MM/YYYY, etc.
+        const dateMatch = text.match(/\b(\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2})\b/g);
+        if (dateMatch && dateMatch.length > 0) {
+            extractedData.dateOfBirth = dateMatch[0]; // Guess first date is DOB
+            if (dateMatch.length > 1) {
+                extractedData.visaExpiryDate = dateMatch[1];
+            }
         }
+
+        // Email match
+        const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+        if (emailMatch) extractedData.email = emailMatch[0];
+
+        // Phone number match
+        const phoneMatch = text.match(/\+?\d[\d -]{8,12}\d/);
+        if (phoneMatch) extractedData.contactNumber = phoneMatch[0];
+
+        // For fields we can't easily regex (like names and remarks), we can append the raw text to remark 
+        // to help the user manually copy it over
+        extractedData.remark = `[RAW OCR TEXT] -> ${text.substring(0, 300)}...`;
 
         // Delete the temporarily uploaded file used for extraction to save space
         fs.unlinkSync(req.file.path);
@@ -94,6 +98,10 @@ router.post('/extract', verifyToken, upload.single('document'), async (req, res)
 
     } catch (err) {
         console.error("Extraction error:", err);
+        // Clean up file if there's an error and it still exists
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
         res.status(500).json({ message: "Extraction Error: " + (err.message || err.toString()) });
     }
 });

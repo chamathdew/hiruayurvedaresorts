@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { format, isToday } from 'date-fns';
 import { Search, Filter, PlaneTakeoff, Eye } from 'lucide-react';
 import ViewGuestModal from '../components/ViewGuestModal';
+import API_BASE_URL from '../config';
 
 const Departures = () => {
     const { token } = useAuth();
@@ -15,7 +16,7 @@ const Departures = () => {
     useEffect(() => {
         const fetchGuests = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/guests', {
+                const res = await axios.get(`${API_BASE_URL}/guests`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setGuests(res.data);
@@ -37,14 +38,14 @@ const Departures = () => {
         .sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center mb-6">
+        <div className="space-y-4 lg:space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
-                        <PlaneTakeoff className="w-8 h-8 text-blue-500" />
+                    <h2 className="text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-3">
+                        <PlaneTakeoff className="w-6 h-6 lg:w-8 lg:h-8 text-[#E89102]" />
                         Departure List
                     </h2>
-                    <p className="text-slate-500 mt-1">Track all outgoing guest departures</p>
+                    <p className="text-sm text-slate-500 mt-1 font-medium italic">Track all outgoing guest departures</p>
                 </div>
             </div>
 
@@ -61,7 +62,7 @@ const Departures = () => {
                         <input
                             type="text"
                             placeholder="Search by name or passport..."
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-slate-50"
+                            className="w-full pl-10 pr-4 py-2 border border-white/40 rounded-lg focus:ring-2 focus:ring-[#E89102] focus:border-[#E89102] outline-none transition bg-white/30 backdrop-blur-md shadow-inner placeholder-slate-500"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -71,7 +72,7 @@ const Departures = () => {
                         <div className="flex items-center space-x-2">
                             <Filter className="text-slate-400 w-5 h-5" />
                             <select
-                                className="border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50"
+                                className="border border-white/40 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#E89102] outline-none bg-white/30 backdrop-blur-md shadow-inner text-slate-700"
                                 value={hotelFilter}
                                 onChange={(e) => setHotelFilter(e.target.value)}
                             >
@@ -88,12 +89,12 @@ const Departures = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-slate-50 border-y border-slate-200">
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Departure Date</th>
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Guest Name</th>
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Hotel & Room</th>
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Status</th>
-                                <th className="py-4 px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider text-right">Actions</th>
+                            <tr className="bg-white/40 backdrop-blur-md border-y border-white/50 shadow-sm">
+                                <th className="py-4 px-3 sm:px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Departure Date</th>
+                                <th className="py-4 px-3 sm:px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Guest Name</th>
+                                <th className="py-4 px-3 sm:px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Hotel & Room</th>
+                                <th className="py-4 px-3 sm:px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider">Status</th>
+                                <th className="py-4 px-3 sm:px-6 font-semibold text-slate-600 text-sm uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -101,40 +102,40 @@ const Departures = () => {
                                 const depDate = new Date(guest.departureDate);
                                 const today = isToday(depDate);
                                 return (
-                                    <tr key={guest._id} className={`transition ${today ? 'bg-blue-50/50 hover:bg-blue-50' : 'hover:bg-slate-50/50'}`}>
-                                        <td className="py-4 px-6">
-                                            <p className={`font-bold ${today ? 'text-blue-600' : 'text-slate-800'}`}>
+                                    <tr key={guest._id} className={`transition border-b border-white/20 ${today ? 'bg-[#E89102]/10 hover:bg-[#E89102]/20' : 'hover:bg-white/5'}`}>
+                                        <td className="py-4 px-3 sm:px-6">
+                                            <p className={`font-bold ${today ? 'text-[#E89102]' : ''}`}>
                                                 {format(depDate, 'MMM dd, yyyy')}
                                             </p>
-                                            {today && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium inline-block mt-1">Today</span>}
+                                            {today && <span className="text-[10px] bg-[#E89102] text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-widest inline-block mt-1">Today</span>}
                                         </td>
-                                        <td className="py-4 px-6">
+                                        <td className="py-4 px-3 sm:px-6">
                                             <div className="flex items-center">
-                                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mr-3">
+                                                <div className="w-10 h-10 rounded-xl bg-[#E89102]/20 text-[#E89102] flex items-center justify-center font-bold mr-3 shadow-sm border border-[#E89102]/10">
                                                     {guest.fullName.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <p className="font-semibold text-slate-800">{guest.fullName}</p>
+                                                    <p className="font-bold">{guest.fullName}</p>
                                                     <p className="text-xs text-slate-500">{guest.nationality}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-4 px-6">
-                                            <p className="font-medium text-slate-800">{guest.hotelBranch}</p>
+                                        <td className="py-4 px-3 sm:px-6">
+                                            <p className="font-bold">{guest.hotelBranch}</p>
                                             <p className="text-xs text-slate-500">Room {guest.roomNumber}</p>
                                         </td>
-                                        <td className="py-4 px-6">
+                                        <td className="py-4 px-3 sm:px-6">
                                             <span className={`px-3 py-1 rounded-full text-xs font-semibold
-                                                ${guest.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' :
-                                                    guest.paymentStatus === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                                                        'bg-slate-100 text-slate-700'}`}>
+                                                ${guest.paymentStatus === 'Paid' ? 'bg-green-100/10 text-green-500' :
+                                                    guest.paymentStatus === 'Pending' ? 'bg-[#E89102]/10 text-[#E89102]' :
+                                                        'bg-slate-100/10 text-slate-500'}`}>
                                                 {guest.paymentStatus}
                                             </span>
                                         </td>
-                                        <td className="py-4 px-6 text-right">
+                                        <td className="py-4 px-3 sm:px-6 text-right">
                                             <button
                                                 onClick={() => setSelectedGuest(guest)}
-                                                className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition"
+                                                className="text-[#E89102] hover:text-[#d18102] bg-[#E89102]/10 hover:bg-[#E89102]/20 p-2 rounded-xl transition shadow-sm border border-[#E89102]/10"
                                                 title="View Details"
                                             >
                                                 <Eye className="w-4 h-4" />
