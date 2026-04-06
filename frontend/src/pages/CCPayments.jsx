@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { format } from 'date-fns';
-import { Search, Filter, Plus, CreditCard, Landmark, Trash2 } from 'lucide-react';
+import { format, isWithinInterval, startOfDay, endOfDay, parseISO } from 'date-fns';
+import { Search, Filter, Plus, CreditCard, Landmark, Trash2, Calendar } from 'lucide-react';
 import AddCCPaymentModal from '../components/AddCCPaymentModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import API_BASE_URL from '../config';
@@ -15,6 +15,7 @@ const CCPayments = () => {
     const [payments, setPayments] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [hotelFilter, setHotelFilter] = useState('All');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -48,15 +49,27 @@ const CCPayments = () => {
         }
     };
 
-    const filteredPayments = payments.filter(payment => {
-        const matchesSearch = payment.invoiceNo?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesHotel = hotelFilter === 'All' || payment.hotelBranch === hotelFilter;
-        return matchesSearch && matchesHotel;
-    });
+    const filteredPayments = useMemo(() => {
+        return payments.filter(payment => {
+            const matchesSearch = payment.invoiceNo?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesHotel = hotelFilter === 'All' || payment.hotelBranch === hotelFilter;
+            
+            let matchesDate = true;
+            if (dateRange.start && dateRange.end && payment.date) {
+                const pDate = new Date(payment.date);
+                const sDate = startOfDay(parseISO(dateRange.start));
+                const eDate = endOfDay(parseISO(dateRange.end));
+                matchesDate = isWithinInterval(pDate, { start: sDate, end: eDate });
+            }
+            
+            return matchesSearch && matchesHotel && matchesDate;
+        });
+    }, [payments, searchTerm, hotelFilter, dateRange]);
 
     const tableHeaderClasses = `border py-3 px-4 text-center align-middle font-bold text-xs uppercase tracking-wider ${isDark ? 'border-slate-700 text-slate-300 bg-slate-800/50' : 'border-slate-300 text-slate-700 bg-slate-100'}`;
     const tableSubHeaderClasses = `border py-2 px-4 text-center text-[10px] font-black uppercase ${isDark ? 'border-slate-700 text-slate-400 bg-slate-800/30' : 'border-slate-200 text-slate-600 bg-slate-50'}`;
     const tableCellClasses = `border py-3 px-4 text-sm ${isDark ? 'border-slate-800 text-slate-200' : 'border-slate-200 text-slate-700'}`;
+    const inputClass = `border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#E89102] outline-none transition bg-white/10 backdrop-blur-md shadow-inner ${isDark ? 'border-slate-700 text-white' : 'border-white/40 text-slate-700'}`;
 
     return (
         <div className="space-y-4 lg:space-y-6">
@@ -84,23 +97,43 @@ const CCPayments = () => {
             />
 
             <div className={`luxury-card p-6 ${isDark ? 'bg-slate-900/40 border-slate-800 shadow-xl shadow-black/20' : ''}`}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0 text-white">
-                    <div className="relative w-full md:w-96">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 text-white">
+                    <div className="relative w-full md:w-80">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                         <input
                             type="text"
-                            placeholder="Search by Invoice No..."
+                            placeholder="Search Invoice No..."
                             className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#E89102] outline-none transition bg-white/10 backdrop-blur-md shadow-inner placeholder-slate-500 ${isDark ? 'border-slate-700 text-white' : 'border-white/40 text-slate-700'}`}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className={`flex items-center space-x-2 p-1 rounded-xl border ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-white/50'}`}>
+                            <Calendar className={`w-4 h-4 ml-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                            <input
+                                type="date"
+                                className={`bg-transparent outline-none text-sm px-2 py-1 ${isDark ? 'text-white style-color-scheme-dark' : 'text-slate-700'}`}
+                                value={dateRange.start}
+                                onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                            />
+                            <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>to</span>
+                            <input
+                                type="date"
+                                className={`bg-transparent outline-none text-sm px-2 py-1 ${isDark ? 'text-white style-color-scheme-dark' : 'text-slate-700'}`}
+                                value={dateRange.end}
+                                onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                            />
+                            {(dateRange.start || dateRange.end) && (
+                                <button onClick={() => setDateRange({start:'', end:''})} className="mr-2 text-xs text-red-400 hover:text-red-500 font-bold">Clear</button>
+                            )}
+                        </div>
+
                         <div className="flex items-center space-x-2">
                             <Filter className="text-slate-400 w-5 h-5" />
                             <select
-                                className={`border rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#E89102] outline-none transition bg-white/10 backdrop-blur-md shadow-inner ${isDark ? 'border-slate-700 text-white' : 'border-white/40 text-slate-700'}`}
+                                className={inputClass}
                                 value={hotelFilter}
                                 onChange={(e) => setHotelFilter(e.target.value)}
                             >
@@ -185,7 +218,7 @@ const CCPayments = () => {
                                 )) : (
                                     <tr>
                                         <td colSpan={user?.role === 'Admin' ? 9 : 8} className={`py-12 text-center text-sm italic ${isDark ? 'text-slate-500 bg-slate-800/20' : 'text-slate-500 bg-slate-50'}`}>
-                                            No CC payment records found. Add your first entry!
+                                            No CC payment records found matching filters.
                                         </td>
                                     </tr>
                                 )}

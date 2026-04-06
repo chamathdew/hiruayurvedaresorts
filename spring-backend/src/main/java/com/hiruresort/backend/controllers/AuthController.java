@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+
+
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -59,11 +62,26 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
-        // Hash the password before saving
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = userRepository.save(user);
-        return ResponseEntity.status(201).body(savedUser);
+    @SuppressWarnings("all")
+    @PutMapping("/profile/{id}")
+    public ResponseEntity<User> updateProfile(@PathVariable String id, @RequestBody User profileUpdates) {
+
+
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (profileUpdates.getUsername() != null) user.setUsername(profileUpdates.getUsername());
+            if (profileUpdates.getPassword() != null && !profileUpdates.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(profileUpdates.getPassword()));
+            }
+            if (profileUpdates.getProfilePicture() != null) user.setProfilePicture(profileUpdates.getProfilePicture());
+            
+            return ResponseEntity.ok(userRepository.save(user));
+        }
+
+
+
+        return ResponseEntity.notFound().build();
     }
+
 }

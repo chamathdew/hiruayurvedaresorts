@@ -32,6 +32,8 @@ ProtectedRoute.propTypes = {
   allowedRoles: PropTypes.arrayOf(PropTypes.string)
 };
 
+import Belegungsplan from './pages/Belegungsplan';
+
 function App() {
   return (
     <ThemeProvider>
@@ -47,6 +49,7 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route index element={<Dashboard />} />
+                <Route path="belegungsplan" element={<Belegungsplan />} />
                 <Route path="guests" element={<Guests />} />
                 <Route path="arrivals" element={<Arrivals />} />
                 <Route path="departures" element={<Departures />} />

@@ -93,8 +93,10 @@ const ViewGuestModal = ({ isOpen, onClose, guest }) => {
                                 {renderField('No of Pax', guest.pax)}
                                 {renderField('Arrival Date', guest.arrivalDate ? format(new Date(guest.arrivalDate), 'MMM dd, yyyy') : null)}
                                 {renderField('Departure Date', guest.departureDate ? format(new Date(guest.departureDate), 'MMM dd, yyyy') : null)}
-                                {renderField('Agent Name', guest.agent)}
+                                {renderField('Sponsored By / Agent', guest.agent)}
+                                {renderField('Applicant Type', guest.applicantType)}
                             </div>
+
                         </div>
 
                         {/* Remark */}
@@ -136,8 +138,10 @@ ViewGuestModal.propTypes = {
         arrivalDate: PropTypes.string,
         departureDate: PropTypes.string,
         agent: PropTypes.string,
+        applicantType: PropTypes.string,
         remark: PropTypes.string
     })
+
 };
 
 export default ViewGuestModal;

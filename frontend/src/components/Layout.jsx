@@ -41,6 +41,9 @@ const Layout = () => {
                         <h1 className={`text-lg font-bold lg:hidden drop-shadow-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>Hiru Resorts</h1>
                     </div>
 
+                    {/* Portal Target for Page-Specific Headers */}
+                    <div id="page-header-portal" className="flex-1 w-full flex items-center px-4 md:px-8"></div>
+
                     <div className="flex items-center space-x-3 lg:space-x-6">
                         <div className="hidden sm:block">
                             <NotificationDropdown />

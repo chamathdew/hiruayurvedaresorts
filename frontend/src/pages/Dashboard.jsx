@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Users, UserPlus, UserMinus, DollarSign, CalendarHeart } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { Users, UserPlus, UserMinus, DollarSign, CalendarHeart, Calendar as CalendarIcon } from 'lucide-react';
 import PropTypes from 'prop-types';
+import { format, parseISO, isSameMonth } from 'date-fns';
 import LoadingSpinner from '../components/LoadingSpinner';
 import API_BASE_URL from '../config';
 
@@ -36,37 +38,76 @@ DashboardCard.propTypes = {
 
 const Dashboard = () => {
     const { token, user } = useAuth();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    
     const [isLoading, setIsLoading] = useState(true);
+    const [activities, setActivities] = useState([]);
+    const [ccPayments, setCcPayments] = useState([]);
+    const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
     const [stats, setStats] = useState({
         totalGuests: 0,
         todayArrivals: 0,
         todayDepartures: 0,
-        totalRevenue: 0,
     });
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchDashboardData = async () => {
             setIsLoading(true);
             try {
-                const res = await axios.get(`${API_BASE_URL}/guests/stats`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setStats(res.data);
+                const [statsRes, activityRes, ccRes] = await Promise.all([
+                    axios.get(`${API_BASE_URL}/guests/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`${API_BASE_URL}/notifications/recent`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`${API_BASE_URL}/cc-payments`, { headers: { Authorization: `Bearer ${token}` } })
+                ]);
+                setStats(statsRes.data);
+                setActivities(activityRes.data);
+                setCcPayments(ccRes.data);
             } catch (err) {
                 console.error(err);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchStats();
+        fetchDashboardData();
     }, [token]);
 
+    const getActivityIcon = (type) => {
+        switch(type) {
+            case 'BIRTHDAY': return { icon: CalendarHeart, color: 'bg-[#E89102]/20 text-[#E89102]' };
+            case 'CC_PAYMENT_ADDED': return { icon: DollarSign, color: 'bg-green-100 text-green-600' };
+            case 'BOOKING_ADDED': return { icon: UserPlus, color: 'bg-blue-100 text-blue-600' };
+            default: return { icon: Users, color: 'bg-slate-100 text-slate-600' };
+        }
+    };
+
+    // Calculate Dynamic Revenue based on selectedMonth
+    const currentMonthRevenue = useMemo(() => {
+        if (!ccPayments.length) return 0;
+        const [year, month] = selectedMonth.split('-');
+        const targetDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+        
+        return ccPayments
+            .filter(p => p.date && isSameMonth(new Date(p.date), targetDate))
+            .reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+    }, [ccPayments, selectedMonth]);
+
     return (
-        <div className="space-y-4 lg:space-y-6">
+        <div className="space-y-4 lg:space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 lg:mb-8 gap-4">
                 <div>
-                    <h2 className="text-2xl lg:text-3xl font-black tracking-tight">Dashboard Overview</h2>
-                    <p className="text-sm text-slate-500 mt-1 font-medium italic">Welcome back, Sajith! Have a Great Day!</p>
+                    <h2 className={`text-2xl lg:text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>Dashboard Overview</h2>
+                    <p className={`text-sm mt-1 font-medium italic ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Welcome back, {user?.username}! Have a Great Day!</p>
+                </div>
+                
+                <div className="flex items-center gap-3 bg-glass p-2 rounded-xl">
+                    <CalendarIcon className={`w-5 h-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                    <input 
+                        type="month" 
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className={`bg-transparent outline-none font-bold text-sm cursor-pointer ${isDark ? 'text-white style-color-scheme-dark' : 'text-slate-800'}`}
+                    />
                 </div>
             </div>
 
@@ -93,8 +134,8 @@ const Dashboard = () => {
                     isLoading={isLoading}
                 />
                 <DashboardCard
-                    title="Total Revenue"
-                    value={`$${stats.totalRevenue.toLocaleString()}`}
+                    title={`Revenue (${format(parseISO(`${selectedMonth}-01`), 'MMM')})`}
+                    value={`Rs. ${currentMonthRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
                     icon={DollarSign}
                     colorClass="bg-[#E89102] text-white"
                     isLoading={isLoading}
@@ -103,43 +144,42 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 luxury-card p-6">
-                    <h3 className="text-xl font-bold mb-6">Recent Activity</h3>
+                    <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-800'}`}>Recent Activity</h3>
                     {isLoading ? (
                         <div className="py-10">
                             <LoadingSpinner size="md" message="Loading activity..." />
                         </div>
                     ) : (
                         <div className="flex flex-col space-y-4">
-                            <div className="bg-white/30 backdrop-blur-md p-4 rounded-xl flex items-center justify-between border border-white/40 shadow-sm">
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                                        <UserPlus className="w-5 h-5" />
+                            {activities.length > 0 ? activities.map((act, i) => {
+                                const meta = getActivityIcon(act.type);
+                                return (
+                                    <div key={i} className={`bg-glass p-4 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-right duration-300`} style={{ animationDelay: `${i * 50}ms` }}>
+                                        <div className="flex items-center space-x-4">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${meta.color}`}>
+                                                <meta.icon className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{act.message}</p>
+                                                <p className="text-xs text-slate-500 uppercase tracking-tighter">
+                                                    {act.hotelBranch} • {new Date(act.createdAt).toLocaleTimeString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {act.type === 'BIRTHDAY' && (
+                                            <span className="text-xs px-3 py-1 bg-[#E89102]/20 text-[#E89102] rounded-full font-bold uppercase tracking-widest border border-[#E89102]/30">Special</span>
+                                        )}
                                     </div>
-                                    <div>
-                                        <p className="font-bold">John Doe checked in</p>
-                                        <p className="text-xs text-slate-500">Hiru Villa • Room 102</p>
-                                    </div>
-                                </div>
-                                <span className="text-sm text-slate-400">2 hours ago</span>
-                            </div>
-                             <div className="bg-white/5 p-4 rounded-xl flex items-center justify-between border border-white/5 hover:bg-white/10 transition-colors">
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-10 h-10 bg-[#E89102]/20 text-[#E89102] rounded-lg flex items-center justify-center">
-                                        <CalendarHeart className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="font-bold">Sarah Smith&apos;s Birthday</p>
-                                        <p className="text-xs text-slate-500 font-medium">Hiru Om • Room 205</p>
-                                    </div>
-                                </div>
-                                <span className="text-xs px-3 py-1 bg-[#E89102]/20 text-[#E89102] rounded-full font-bold uppercase tracking-widest">Highlight</span>
-                            </div>
+                                );
+                            }) : (
+                                <p className="text-center py-10 text-slate-400">No recent activities found.</p>
+                            )}
                         </div>
                     )}
                 </div>
 
                 <div className="luxury-card p-6">
-                    <h3 className="text-xl font-bold mb-6">Occupancy Status</h3>
+                    <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-800'}`}>Occupancy Status</h3>
                     {isLoading ? (
                         <div className="py-10">
                             <LoadingSpinner size="md" message="Calculating occupancy..." />
@@ -149,36 +189,36 @@ const Dashboard = () => {
                             <div>
                                 <div className="flex justify-between mb-2">
                                     <span className="text-sm font-medium text-slate-400">Hiru Villa</span>
-                                    <span className="text-sm font-bold">85%</span>
+                                    <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>85%</span>
                                 </div>
-                                <div className="w-full bg-white/5 rounded-full h-2">
+                                <div className={`w-full rounded-full h-2 ${isDark ? 'bg-white/5' : 'bg-slate-200'}`}>
                                     <div className="bg-[#E89102] h-2 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(232,145,2,0.3)]" style={{ width: '85%' }}></div>
                                 </div>
                             </div>
                             <div>
                                 <div className="flex justify-between mb-2">
                                     <span className="text-sm font-medium text-slate-400">Hiru Om</span>
-                                    <span className="text-sm font-bold">60%</span>
+                                    <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>60%</span>
                                 </div>
-                                <div className="w-full bg-white/5 rounded-full h-2">
+                                <div className={`w-full rounded-full h-2 ${isDark ? 'bg-white/5' : 'bg-slate-200'}`}>
                                     <div className="bg-[#E89102] h-2 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(232,145,2,0.3)]" style={{ width: '60%' }}></div>
                                 </div>
                             </div>
                             <div>
                                 <div className="flex justify-between mb-2">
                                     <span className="text-sm font-medium text-slate-400">Hiru Mudhra</span>
-                                    <span className="text-sm font-bold">40%</span>
+                                    <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>40%</span>
                                 </div>
-                                <div className="w-full bg-white/5 rounded-full h-2">
+                                <div className={`w-full rounded-full h-2 ${isDark ? 'bg-white/5' : 'bg-slate-200'}`}>
                                     <div className="bg-[#E89102] h-2 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(232,145,2,0.3)]" style={{ width: '40%' }}></div>
                                 </div>
                             </div>
                             <div>
                                 <div className="flex justify-between mb-2">
                                     <span className="text-sm font-medium text-slate-400">Hiru Aadya</span>
-                                    <span className="text-sm font-bold">95%</span>
+                                    <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>95%</span>
                                 </div>
-                                <div className="w-full bg-white/5 rounded-full h-2">
+                                <div className={`w-full rounded-full h-2 ${isDark ? 'bg-white/5' : 'bg-slate-200'}`}>
                                     <div className="bg-[#E89102] h-2 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(232,145,2,0.3)]" style={{ width: '95%' }}></div>
                                 </div>
                             </div>

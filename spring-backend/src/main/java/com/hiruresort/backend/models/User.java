@@ -21,4 +21,6 @@ public class User {
     private String role; // Admin, Manager, Accounts, Front Office
     
     private String hotelBranch; // Hiru Villa, Hiru Om, Hiru Mudhra, Hiru Aadya, All
+
+    private String profilePicture; // Base64 or URL
 }

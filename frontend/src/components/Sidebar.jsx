@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { LayoutDashboard, Users, FileText, Settings, LogOut, PlaneLanding, PlaneTakeoff, X, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, LogOut, PlaneLanding, PlaneTakeoff, X, CreditCard, Calendar } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 const Sidebar = ({ onClose }) => {
@@ -52,6 +52,7 @@ const Sidebar = ({ onClose }) => {
 
             <nav className="flex-1 px-4 py-6 space-y-2">
                 <NavItem to="/" icon={LayoutDashboard} label="Dashboard" end />
+                <NavItem to="/belegungsplan" icon={Calendar} label="Belegungsplan" />
                 <NavItem to="/guests" icon={Users} label="Guests" />
                 <NavItem to="/arrivals" icon={PlaneLanding} label="Arrival List" />
                 <NavItem to="/departures" icon={PlaneTakeoff} label="Departure List" />

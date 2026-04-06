@@ -14,9 +14,12 @@ public class Notification {
     private String id;
     
     private String userId;
-    private String type; // CC_PAYMENT_ADDED
+    private String type; // CC_PAYMENT_ADDED, BIRTHDAY, BOOKING_ADDED
     private String message;
+    private String hotelBranch;
     private boolean isRead = false;
+    private boolean isActivity = true;
     private String paymentId;
+    private String guestId;
     private Date createdAt = new Date();
 }

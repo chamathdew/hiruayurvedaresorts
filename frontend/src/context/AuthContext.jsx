@@ -5,22 +5,24 @@ import PropTypes from 'prop-types';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token') || null);
-
-    useEffect(() => {
-        // Ideally verify token here or load user data from decoded token/localStorage
+    const [user, setUser] = useState(() => {
         const savedUser = localStorage.getItem('user');
-        if (savedUser && token) {
-            setUser(JSON.parse(savedUser));
-        }
-    }, [token]);
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
+    const [token, setToken] = useState(() => localStorage.getItem('token') || null);
+    const [isLoading, setIsLoading] = useState(false); // Can be used for initial verification
 
     const login = (userData, jwtToken) => {
         setUser(userData);
         setToken(jwtToken);
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('token', jwtToken);
+    };
+
+    const updateUser = (userData) => {
+        const updatedUser = { ...user, ...userData };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
     };
 
     const logout = () => {

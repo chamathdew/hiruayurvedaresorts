@@ -14,6 +14,8 @@ const Guests = () => {
     const [hotelFilter, setHotelFilter] = useState('All');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [viewModalGuest, setViewModalGuest] = useState(null);
+    const [categoryFilter, setCategoryFilter] = useState('All');
+
 
     const fetchGuests = useCallback(async () => {
         try {
@@ -34,8 +36,12 @@ const Guests = () => {
         const matchesSearch = guest.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             guest.passportNumber?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesHotel = hotelFilter === 'All' || guest.hotelBranch === hotelFilter;
-        return matchesSearch && matchesHotel;
+        const matchesCategory = categoryFilter === 'All' || guest.applicantType === categoryFilter;
+        return matchesSearch && matchesHotel && matchesCategory;
     });
+
+    const categories = Array.from(new Set(guests.map(g => g.applicantType).filter(Boolean)));
+
 
     return (
         <div className="space-y-4 lg:space-y-6">
@@ -53,7 +59,23 @@ const Guests = () => {
                 </button>
             </div>
 
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="luxury-card p-4 flex flex-col items-center justify-center border-l-4 border-[#E89102]">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Guests</span>
+                    <span className="text-2xl font-black text-slate-800">{guests.length}</span>
+                </div>
+                {categories.slice(0, 3).map((cat, idx) => (
+                    <div key={cat} className="luxury-card p-4 flex flex-col items-center justify-center border-l-4 border-slate-400">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest truncate w-full text-center">{cat || 'Regular'}</span>
+                        <span className="text-2xl font-black text-slate-800">
+                            {guests.filter(g => g.applicantType === cat).length}
+                        </span>
+                    </div>
+                ))}
+            </div>
+
             <AddGuestModal
+
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onGuestAdded={fetchGuests}
@@ -66,7 +88,7 @@ const Guests = () => {
             />
 
             <div className="luxury-card p-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0 gap-4">
                     <div className="relative w-full md:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                         <input
@@ -78,11 +100,11 @@ const Guests = () => {
                         />
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    <div className="flex flex-wrap items-center gap-4">
                         <div className="flex items-center space-x-2">
                             <Filter className="text-slate-400 w-5 h-5" />
                             <select
-                                className="border border-white/40 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#E89102] outline-none bg-white/30 backdrop-blur-md shadow-inner"
+                                className="border border-white/40 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#E89102] outline-none bg-white/30 backdrop-blur-md shadow-inner text-sm"
                                 value={hotelFilter}
                                 onChange={(e) => setHotelFilter(e.target.value)}
                             >
@@ -93,8 +115,23 @@ const Guests = () => {
                                 <option value="Hiru Aadya">Hiru Aadya</option>
                             </select>
                         </div>
+
+                        <div className="flex items-center space-x-2">
+                            <select
+                                className="border border-white/40 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#E89102] outline-none bg-white/30 backdrop-blur-md shadow-inner text-sm"
+                                value={categoryFilter}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
+                            >
+                                <option value="All">All Categories</option>
+                                {categories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
+
+
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -132,7 +169,9 @@ const Guests = () => {
                                             <div>
                                                 <p className="font-bold text-slate-300">{guest.hotelBranch} - Rm {guest.roomNumber || 'TBA'}</p>
                                                 <p className="text-xs text-slate-500">Pax: {guest.pax}, Agent: {guest.agent || 'Direct'}</p>
+                                                <p className="text-[10px] font-bold text-[#E89102] uppercase tracking-[0.1em] mt-1">{guest.applicantType || 'Regular'}</p>
                                             </div>
+
                                             <div>
                                                 <p className="text-xs font-semibold text-slate-500">IN: {guest.arrivalDate ? format(new Date(guest.arrivalDate), 'dd/MM/yy') : '-'}</p>
                                                 <p className="text-xs font-semibold text-slate-500">OUT: {guest.departureDate ? format(new Date(guest.departureDate), 'dd/MM/yy') : '-'}</p>

@@ -30,14 +30,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173", 
-            "http://localhost:5174", 
-            "http://localhost:5000", 
-            "http://192.168.1.24:5000",
-            "http://localhost:3000", 
-            "http://localhost:8080"
-        ));
+        // Allow all origins to support access from any device on the network
+        config.setAllowedOriginPatterns(Arrays.asList("*"));
+
 
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "Accept", "Origin", "X-Requested-With"));

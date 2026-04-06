@@ -27,8 +27,10 @@ const AddGuestModal = ({ isOpen, onClose, onGuestAdded }) => {
         departureDate: '',
         pax: 1,
         agent: '',
+        applicantType: '',
         remark: ''
     });
+
 
     const [passportFile, setPassportFile] = useState(null);
 
@@ -278,9 +280,14 @@ const AddGuestModal = ({ isOpen, onClose, onGuestAdded }) => {
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className={`text-sm font-semibold ${document.documentElement.getAttribute('data-theme') === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Agent</label>
-                                    <input type="text" name="agent" value={formData.agent} onChange={handleChange} className={`w-full px-4 py-2 rounded-lg outline-none transition ${document.documentElement.getAttribute('data-theme') === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:ring-2 focus:ring-[#E89102]' : 'bg-slate-50 border-slate-200 focus:ring-2 focus:ring-[#E89102]'}`} placeholder="Travel Agent Name" />
+                                    <label className={`text-sm font-semibold ${document.documentElement.getAttribute('data-theme') === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Sponserd By / Agent</label>
+                                    <input type="text" name="agent" value={formData.agent} onChange={handleChange} className={`w-full px-4 py-2 rounded-lg outline-none transition ${document.documentElement.getAttribute('data-theme') === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:ring-2 focus:ring-[#E89102]' : 'bg-slate-50 border-slate-200 focus:ring-2 focus:ring-[#E89102]'}`} placeholder="Travel Agent or Sponsor" />
                                 </div>
+                                <div className="space-y-1">
+                                    <label className={`text-sm font-semibold ${document.documentElement.getAttribute('data-theme') === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Applicant Type</label>
+                                    <input type="text" name="applicantType" value={formData.applicantType} onChange={handleChange} className={`w-full px-4 py-2 rounded-lg outline-none transition ${document.documentElement.getAttribute('data-theme') === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:ring-2 focus:ring-[#E89102]' : 'bg-slate-50 border-slate-200 focus:ring-2 focus:ring-[#E89102]'}`} placeholder="e.g. Tourist, Business" />
+                                </div>
+
                             </div>
                         </div>
 

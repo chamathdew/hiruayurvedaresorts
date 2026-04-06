@@ -30,17 +30,27 @@ public class CCPaymentController {
     public ResponseEntity<CCPayment> addPayment(@RequestBody @NonNull CCPayment payment) {
         CCPayment savedPayment = ccPaymentRepository.save(payment);
 
-        // Create notifications for Admin and Accounts
+        // Global Activity for Central Dashboard
+        Notification activity = new Notification();
+        activity.setType("CC_PAYMENT_ADDED");
+        activity.setMessage("New CC Settlement: " + savedPayment.getInvoiceNo() + " at " + savedPayment.getHotelBranch());
+        activity.setPaymentId(savedPayment.getId());
+        activity.setActivity(true);
+        activity.setHotelBranch(savedPayment.getHotelBranch());
+        notificationRepository.save(activity);
+
+        // Individual Notifications for Admin and Accounts
         List<User> users = userRepository.findAll();
         for (User user : users) {
-            if ("Admin".equals(user.getRole()) || "Accounts".equals(user.getRole())) {
-                Notification notification = new Notification();
-                notification.setUserId(user.getId());
-                notification.setType("CC_PAYMENT_ADDED");
-                notification.setMessage("New CC Settlement: " + savedPayment.getInvoiceNo() + " at " + savedPayment.getHotelBranch());
-                notification.setPaymentId(savedPayment.getId());
-                notificationRepository.save(notification);
-            }
+             if (user != null && ("Admin".equals(user.getRole()) || "Accounts".equals(user.getRole()))) {
+                Notification n = new Notification();
+                n.setUserId(user.getId());
+                n.setType("CC_PAYMENT_ADDED");
+                n.setMessage("New CC Settlement: " + savedPayment.getInvoiceNo() + " at " + savedPayment.getHotelBranch());
+                n.setPaymentId(savedPayment.getId());
+                n.setActivity(false); // Alert, not dashboard activity
+                notificationRepository.save(n);
+             }
         }
 
         return ResponseEntity.status(201).body(savedPayment);

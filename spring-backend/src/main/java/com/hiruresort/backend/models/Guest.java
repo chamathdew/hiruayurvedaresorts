@@ -35,6 +35,8 @@ public class Guest {
     private Double totalAmount = 0.0;
     private Double advancePayment = 0.0;
     private Double balance = 0.0;
+    private String applicantType;
     private Date createdAt = new Date();
     private Date updatedAt = new Date();
 }
+
