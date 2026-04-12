@@ -9,6 +9,7 @@ import Arrivals from './pages/Arrivals';
 import Departures from './pages/Departures';
 import CCPayments from './pages/CCPayments';
 import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
 import Layout from './components/Layout';
 
 import PropTypes from 'prop-types';
@@ -55,6 +56,7 @@ function App() {
                 <Route path="departures" element={<Departures />} />
                 <Route path="cc-payments" element={<CCPayments />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="notifications" element={<Notifications />} />
                 <Route path="reports" element={<div>Reports Page (Coming Soon)</div>} />
               </Route>
             </Routes>

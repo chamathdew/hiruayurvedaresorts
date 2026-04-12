@@ -7,4 +7,5 @@ import java.util.List;
 public interface OccupancyRepository extends MongoRepository<Occupancy, String> {
     List<Occupancy> findByHotelBranch(String hotelBranch);
     List<Occupancy> findByHotelBranchIn(List<String> branches);
+    void deleteByHotelBranch(String hotelBranch);
 }

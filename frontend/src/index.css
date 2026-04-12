@@ -43,16 +43,17 @@
 @layer utilities {
   /* Dark mode glass - now more solid and dark */
   [data-theme="dark"] .bg-glass {
-    background-color: #1a1a1b;
-    border: 1px solid #262627;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    background-color: rgba(26, 26, 27, 0.7);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   }
 
   /* White mode glass */
   [data-theme="white"] .bg-glass {
-    background-color: rgb(255 255 255 / 0.7);
-    backdrop-filter: blur(24px);
-    border: 1px solid rgb(255 255 255 / 0.6);
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(28px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
 
@@ -106,13 +107,15 @@
 
 /* ===== HEADER ===== */
 [data-theme="dark"] .header-bg {
-  background: #131313;
-  border-bottom: 1px solid #262627;
+  background: rgba(19, 19, 19, 0.7);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="white"] .header-bg {
-  background: rgba(255,255,255,0.8);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
 }
 
 /* ===== SETTINGS PAGE HELPERS ===== */
@@ -136,3 +139,24 @@
 
 [data-theme="dark"] .settings-card-inactive { background: #1a1a1b; }
 [data-theme="white"] .settings-card-inactive { background: rgba(241, 245, 249, 0.5); }
+
+/* ===== CUSTOM LOADERS ===== */
+.loader-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.loader-dot {
+  width: 6px;
+  height: 6px;
+  background-color: currentColor;
+  border-radius: 50%;
+  animation: dot-pulse 1.4s infinite ease-in-out both;
+}
+.loader-dot:nth-child(1) { animation-delay: -0.32s; }
+.loader-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes dot-pulse {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1.0); }
+}

@@ -27,7 +27,7 @@ public class NotificationController {
     public ResponseEntity<List<Notification>> getRecentActivities() {
         // Trigger Birthday Check when dashboard loads
         notificationService.checkAndCreateBirthdayNotifications();
-        return ResponseEntity.ok(notificationRepository.findTop5ByIsActivityTrueOrderByCreatedAtDesc());
+        return ResponseEntity.ok(notificationRepository.findTop5ByActivityTrueOrderByCreatedAtDesc());
     }
 
     @PutMapping("/{id}/read")
@@ -39,5 +39,23 @@ public class NotificationController {
                     return ResponseEntity.ok(notificationRepository.save(n));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/read-all")
+    public ResponseEntity<Void> markAllRead() {
+        List<Notification> unread = notificationRepository.findAll().stream()
+                .filter(n -> !n.isRead())
+                .peek(n -> n.setRead(true))
+                .toList();
+        if (!unread.isEmpty()) {
+            notificationRepository.saveAll(unread);
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteNotification(@PathVariable String id) {
+        notificationRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }

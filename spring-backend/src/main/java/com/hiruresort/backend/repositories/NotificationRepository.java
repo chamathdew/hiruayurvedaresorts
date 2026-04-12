@@ -7,5 +7,5 @@ import java.util.List;
 public interface NotificationRepository extends MongoRepository<Notification, String> {
     List<Notification> findByUserId(String userId);
     List<Notification> findAllByOrderByCreatedAtDesc();
-    List<Notification> findTop5ByIsActivityTrueOrderByCreatedAtDesc();
+    List<Notification> findTop5ByActivityTrueOrderByCreatedAtDesc();
 }

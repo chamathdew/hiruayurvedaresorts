@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface GuestRepository extends MongoRepository<Guest, String> {
     List<Guest> findByHotelBranch(String hotelBranch);
+    void deleteByHotelBranch(String hotelBranch);
 }

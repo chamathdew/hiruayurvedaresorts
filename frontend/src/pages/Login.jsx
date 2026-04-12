@@ -2,13 +2,14 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, ArrowRight } from 'lucide-react';
+import { User, Lock, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import logo from '../assets/logo.png';
 import API_BASE_URL from '../config';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
@@ -85,13 +86,20 @@ const Login = () => {
                                     <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-[#E89102] transition-colors" />
                                 </div>
                                 <input
-                                    type="password"
-                                    className="w-full pl-11 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#E89102] focus:border-transparent outline-none transition-all placeholder-slate-600 font-medium text-white shadow-sm"
+                                    type={showPassword ? "text" : "password"}
+                                    className="w-full pl-11 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#E89102] focus:border-transparent outline-none transition-all placeholder-slate-600 font-medium text-white shadow-sm"
                                     placeholder="Enter your password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-[#E89102] transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
                         </div>
 
@@ -101,8 +109,18 @@ const Login = () => {
                                 disabled={isLoading}
                                 className="w-full py-4 bg-gradient-to-r from-[#E89102] to-[#d18102] hover:from-[#d18102] hover:to-[#E89102] text-white rounded-xl font-black text-lg shadow-xl shadow-orange-500/10 transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed uppercase tracking-widest"
                             >
-                                {isLoading ? 'Signing in...' : 'Sign In'}
-                                {!isLoading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                                {isLoading ? (
+                                    <div className="loader-dots">
+                                        <div className="loader-dot"></div>
+                                        <div className="loader-dot"></div>
+                                        <div className="loader-dot"></div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <span>Sign In</span>
+                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                )}
                             </button>
                         </div>
                     </form>

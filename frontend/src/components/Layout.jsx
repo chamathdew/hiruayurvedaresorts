@@ -4,10 +4,10 @@ import Sidebar from './Sidebar';
 import NotificationDropdown from './NotificationDropdown';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { UserCircle, Menu, X } from 'lucide-react';
+import { UserCircle, Menu, X, LogOut } from 'lucide-react';
 
 const Layout = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -30,7 +30,8 @@ const Layout = () => {
             </div>
 
             <div className={`flex-1 flex flex-col min-w-0 overflow-hidden ${isDark ? '' : 'backdrop-blur-sm bg-white/20'}`}>
-                <header className={`flex justify-between items-center p-4 lg:p-6 border-b z-10 sticky top-0 header-bg ${isDark ? '' : 'backdrop-blur-md'}`}>
+                <header className={`flex justify-between items-center p-4 lg:p-6 border-b z-[40] sticky top-0 header-bg ${isDark ? '' : 'backdrop-blur-md'}`}>
+
                     <div className="flex items-center">
                         <button
                             onClick={toggleSidebar}
@@ -44,16 +45,33 @@ const Layout = () => {
                     {/* Portal Target for Page-Specific Headers */}
                     <div id="page-header-portal" className="flex-1 w-full flex items-center px-4 md:px-8"></div>
 
-                    <div className="flex items-center space-x-3 lg:space-x-6">
+                    <div className="flex items-center space-x-3 lg:space-x-8">
                         <div className="hidden sm:block">
                             <NotificationDropdown />
                         </div>
-                        <div className="flex items-center space-x-2 lg:space-x-3">
+                        <div className="flex items-center space-x-2 lg:space-x-4">
                             <div className="text-right hidden sm:block">
-                                <p className={`text-sm font-bold drop-shadow-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>{user?.username}</p>
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{user?.role} - {user?.hotelBranch}</p>
+                                <p className={`text-sm font-black tracking-tight drop-shadow-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>{user?.username}</p>
+                                <p className={`text-[10px] uppercase tracking-widest font-black text-[#E89102]`}>
+                                    {user?.role} - {user?.hotelBranch}
+                                </p>
                             </div>
-                            <UserCircle className={`w-8 h-8 lg:w-10 lg:h-10 drop-shadow-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                            <div className="relative group p-0.5 rounded-full bg-gradient-to-tr from-[#E89102] to-yellow-400">
+                                <UserCircle className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 border-white/20 ${isDark ? 'text-slate-100 bg-slate-900' : 'text-slate-800 bg-white'}`} />
+                            </div>
+                            
+                            {/* Logout Button */}
+                            <button 
+                                onClick={logout}
+                                title="Logout"
+                                className={`ml-2 p-2.5 rounded-xl border flex items-center gap-2 transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg group
+                                    ${isDark 
+                                        ? 'bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white' 
+                                        : 'bg-red-50/80 border-red-100 text-red-600 hover:bg-red-600 hover:text-white'}`}
+                            >
+                                <LogOut className="w-5 h-5" />
+                                <span className="text-xs font-bold sm:block hidden">Logout</span>
+                            </button>
                         </div>
                     </div>
                 </header>

@@ -13,4 +13,5 @@ public class SystemSettings {
     private boolean allowFrontOfficeToViewOccupancy = true;
     private boolean allowFrontOfficeToViewCCPayments = false;
     private boolean maintenanceMode = false;
+    private String onlineExcelUrl;
 }

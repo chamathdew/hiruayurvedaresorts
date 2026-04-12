@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { LayoutDashboard, Users, FileText, Settings, LogOut, PlaneLanding, PlaneTakeoff, X, CreditCard, Calendar } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, LogOut, PlaneLanding, PlaneTakeoff, X, CreditCard, Calendar, Bell } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 const Sidebar = ({ onClose }) => {
@@ -58,18 +58,10 @@ const Sidebar = ({ onClose }) => {
                 <NavItem to="/departures" icon={PlaneTakeoff} label="Departure List" />
                 <NavItem to="/cc-payments" icon={CreditCard} label="CC Payments" />
                 <NavItem to="/reports" icon={FileText} label="Reports" />
+                <NavItem to="/notifications" icon={Bell} label="Notifications" />
                 <NavItem to="/settings" icon={Settings} label="Settings" />
             </nav>
 
-            <div className={`p-4 border-t ${isDark ? 'border-slate-700/50' : 'border-slate-200'}`}>
-                <button
-                    onClick={handleLogout}
-                    className={`flex items-center space-x-3 w-full px-4 py-2 transition rounded-xl ${isDark ? 'text-slate-400 hover:text-white hover:bg-white/10' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
-                >
-                    <LogOut className="w-5 h-5" />
-                    <span>Logout</span>
-                </button>
-            </div>
         </div>
     );
 };

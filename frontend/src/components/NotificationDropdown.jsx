@@ -11,25 +11,40 @@ const NotificationDropdown = () => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const [notifications, setNotifications] = useState([]);
+    const [lastProcessedId, setLastProcessedId] = useState(null);
+    const [activeToast, setActiveToast] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     
-    const fetchNotifications = useCallback(async () => {
+    const fetchNotifications = useCallback(async (isFirstLoad = false) => {
         if (!token) return;
         try {
             const res = await axios.get(`${API_BASE_URL}/notifications`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setNotifications(res.data);
+            const fetched = res.data;
+            setNotifications(fetched);
+
+            if (!isFirstLoad && fetched.length > 0) {
+                const latest = fetched[0];
+                if (latest._id !== lastProcessedId && !latest.isRead) {
+                    setActiveToast(latest);
+                    setLastProcessedId(latest._id);
+                    // Hide toast after 5s
+                    setTimeout(() => setActiveToast(null), 5000);
+                }
+            } else if (isFirstLoad && fetched.length > 0) {
+                setLastProcessedId(fetched[0]._id);
+            }
         } catch (err) {
             console.error('Failed to fetch notifications', err);
         }
-    }, [token]);
+    }, [token, lastProcessedId]);
 
     useEffect(() => {
-        if (user?.role === 'Admin' || user?.role === 'Accounts') {
-            fetchNotifications();
-            // Poll for new notifications every 60 seconds
-            const interval = setInterval(fetchNotifications, 60000);
+        if (user?.role === 'Admin' || user?.role === 'Accounts' || user?.role === 'Managing Director') {
+            fetchNotifications(true);
+            // Poll for new notifications every 5 seconds for a 'live' feel
+            const interval = setInterval(() => fetchNotifications(false), 5000);
             return () => clearInterval(interval);
         }
     }, [user, fetchNotifications]);
@@ -127,6 +142,30 @@ const NotificationDropdown = () => {
                         </div>
                     </div>
                 </>
+            )}
+
+            {/* LIVE TOAST NOTIFICATION - Floating professionally */}
+            {activeToast && (
+                <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500">
+                    <div className={`p-1 pr-6 rounded-2xl shadow-2xl border flex items-center gap-4 min-w-[320px] max-w-[400px] backdrop-blur-2xl ${isDark ? 'bg-slate-900/90 border-slate-700' : 'bg-white/90 border-slate-200'}`}>
+                        <div className="h-14 w-14 bg-gradient-to-tr from-[#E89102] to-yellow-400 rounded-xl flex items-center justify-center text-white shadow-lg">
+                            <Bell className="w-7 h-7 animate-ring" />
+                        </div>
+                        <div className="flex-1 py-3 text-left">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="p-1 px-2 bg-[#E89102]/20 text-[#E89102] text-[8px] font-black uppercase tracking-[0.2em] rounded-md">New Activity</span>
+                                <span className={`text-[8px] font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Just Now</span>
+                            </div>
+                            <p className={`text-xs font-black leading-snug tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{activeToast.message}</p>
+                        </div>
+                        <button 
+                            onClick={() => setActiveToast(null)}
+                            className={`p-1.5 rounded-lg hover:bg-slate-500/10 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
+                        >
+                            <Check className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
             )}
         </div>
     );

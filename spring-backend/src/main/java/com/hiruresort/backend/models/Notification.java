@@ -17,8 +17,14 @@ public class Notification {
     private String type; // CC_PAYMENT_ADDED, BIRTHDAY, BOOKING_ADDED
     private String message;
     private String hotelBranch;
-    private boolean isRead = false;
-    private boolean isActivity = true;
+    
+    @org.springframework.data.mongodb.core.mapping.Field("isRead")
+    @JsonProperty("isRead")
+    private boolean read = false;
+    
+    @org.springframework.data.mongodb.core.mapping.Field("isActivity")
+    @JsonProperty("isActivity")
+    private boolean activity = true;
     private String paymentId;
     private String guestId;
     private Date createdAt = new Date();

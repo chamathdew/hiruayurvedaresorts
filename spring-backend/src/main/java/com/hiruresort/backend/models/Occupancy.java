@@ -24,4 +24,8 @@ public class Occupancy {
     
     private String color; // Orange, Pink, Yellow, Green, etc.
     private String remark;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    private java.util.Date lastUpdated;
 }
+
